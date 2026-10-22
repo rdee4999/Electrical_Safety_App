@@ -53,6 +53,51 @@ jobs:
               gradle_file.write_text(content)
           PY
 
+      - name: Set Java and Kotlin targets to 17
+        working-directory: VidyutSurakshaAndroid
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+
+          # Update existing Java compatibility settings.
+          s = s.replace(
+              "JavaVersion.VERSION_1_8",
+              "JavaVersion.VERSION_17"
+          )
+
+          # Ensure Android Java compilation targets JVM 17.
+          if "compileOptions {" not in s:
+              start = re.search(r'\bandroid\s*\{', s)
+              if not start:
+                  raise SystemExit("Could not find android { block")
+
+              depth = 1
+              i = start.end()
+              while i < len(s) and depth:
+                  if s[i] == "{":
+                      depth += 1
+                  elif s[i] == "}":
+                      depth -= 1
+                  i += 1
+
+              if depth:
+                  raise SystemExit("Could not find end of android { block")
+
+              s = s[:i-1] + """
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          """ + s[i-1:]
+
+          p.write_text(s)
+          print("Updated Java compatibility to 17")
+          PY
+
       - name: Generate Gradle wrapper and build APK
         working-directory: VidyutSurakshaAndroid
         run: |
