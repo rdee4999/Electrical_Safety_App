@@ -55,14 +55,33 @@ jobs:
           cmdline-tools-version: '12266719'
           packages: 'platform-tools'
 
-      - name: Build debug APK
-        working-directory: VidyutSurakshaAndroid
+      
+      - name: Find Android project and build debug APK
         run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
+          echo "Searching for gradlew..."
+          find . -type f -name gradlew
 
+          GRADLEW=$(find . -type f -name gradlew | head -n 1)
+
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew was not found. Checking extracted files:"
+            find . -maxdepth 4 -type f | head -n 100
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$GRADLEW")
+          echo "Gradle wrapper found in: $PROJECT_DIR"
+
+          chmod +x "$GRADLEW"
+          cd "$PROJECT_DIR"
+          ./gradlew --no-daemon assembleDebug
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
+
+      
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: VidyutSuraksha-debug-apk
-          path: VidyutSurakshaAndroid/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk
+
