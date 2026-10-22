@@ -24,7 +24,7 @@ jobs:
 
       - name: Extract Android project
         run: |
-          unzip -o VidyutSuraksha_Android_Native_Project_Hindi_Update.zip
+          unzip -o VidyutSuraksha_Android_Project_Images_Regulations.zip
 
       - name: Fix Android package names
         run: |
