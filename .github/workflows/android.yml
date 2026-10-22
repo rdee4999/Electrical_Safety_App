@@ -56,32 +56,26 @@ jobs:
           packages: 'platform-tools'
 
       
-      - name: Find Android project and build debug APK
+      
+      - name: Generate Gradle wrapper and build APK
+        working-directory: VidyutSurakshaAndroid
         run: |
-          echo "Searching for gradlew..."
-          find . -type f -name gradlew
+          echo "Downloading Gradle 8.9..."
+          wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          unzip -q gradle-8.9-bin.zip
 
-          GRADLEW=$(find . -type f -name gradlew | head -n 1)
+          echo "Generating Gradle wrapper..."
+          gradle-8.9/bin/gradle wrapper --gradle-version 8.9
 
-          if [ -z "$GRADLEW" ]; then
-            echo "ERROR: gradlew was not found. Checking extracted files:"
-            find . -maxdepth 4 -type f | head -n 100
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$GRADLEW")
-          echo "Gradle wrapper found in: $PROJECT_DIR"
-
-          chmod +x "$GRADLEW"
-          cd "$PROJECT_DIR"
+          chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
 
 
       
-      - name: Upload APK
+            - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: VidyutSuraksha-debug-apk
-          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk
+          path: VidyutSurakshaAndroid/app/build/outputs/apk/debug/app-debug.apk
 
