@@ -57,18 +57,23 @@ jobs:
 
       
       
+      
       - name: Generate Gradle wrapper and build APK
         working-directory: VidyutSurakshaAndroid
         run: |
           echo "Downloading Gradle 8.9..."
           wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip
           unzip -q gradle-8.9-bin.zip
-
-          echo "Generating Gradle wrapper..."
           gradle-8.9/bin/gradle wrapper --gradle-version 8.9
-
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VidyutSuraksha-debug-apk
+          path: VidyutSurakshaAndroid/app/build/outputs/apk/debug/app-debug.apk
+
 
 
 
