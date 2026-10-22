@@ -1,0 +1,68 @@
+
+name: Build Vidyut Suraksha APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'VidyutSuraksha_Android_Native_Project_Hindi_Update.zip'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Android project
+        run: |
+          unzip -o VidyutSuraksha_Android_Native_Project_Hindi_Update.zip
+
+      - name: Fix Kotlin package and Android package names
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("VidyutSurakshaAndroid")
+          source = root / "app/src/main/java/in/vidyutsuraksha/app/MainActivity.kt"
+          if source.exists():
+              source.write_text(source.read_text().replace(
+                  "package in.vidyutsuraksha.app",
+                  "package com.vidyutsuraksha.app"
+              ))
+
+          gradle = root / "app/build.gradle.kts"
+          if gradle.exists():
+              s = gradle.read_text()
+              s = s.replace('namespace = "in.vidyutsuraksha.app"',
+                            'namespace = "com.vidyutsuraksha.app"')
+              s = s.replace('applicationId = "in.vidyutsuraksha.app"',
+                            'applicationId = "com.vidyutsuraksha.app"')
+              gradle.write_text(s)
+          PY
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          cmdline-tools-version: '12266719'
+          packages: 'platform-tools'
+
+      - name: Build debug APK
+        working-directory: VidyutSurakshaAndroid
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VidyutSuraksha-debug-apk
+          path: VidyutSurakshaAndroid/app/build/outputs/apk/debug/app-debug.apk
