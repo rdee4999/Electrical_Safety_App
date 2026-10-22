@@ -26,7 +26,7 @@ jobs:
         run: |
           unzip -o VidyutSuraksha_Android_Native_Project_Hindi_Update.zip
 
-      - name: Fix Kotlin package and Android package names
+      - name: Fix Android package names
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -39,29 +39,23 @@ jobs:
                   "package com.vidyutsuraksha.app"
               ))
 
-          gradle = root / "app/build.gradle.kts"
-          if gradle.exists():
-              s = gradle.read_text()
-              s = s.replace('namespace = "in.vidyutsuraksha.app"',
-                            'namespace = "com.vidyutsuraksha.app"')
-              s = s.replace('applicationId = "in.vidyutsuraksha.app"',
-                            'applicationId = "com.vidyutsuraksha.app"')
-              gradle.write_text(s)
+          gradle_file = root / "app/build.gradle.kts"
+          if gradle_file.exists():
+              content = gradle_file.read_text()
+              content = content.replace(
+                  'namespace = "in.vidyutsuraksha.app"',
+                  'namespace = "com.vidyutsuraksha.app"'
+              )
+              content = content.replace(
+                  'applicationId = "in.vidyutsuraksha.app"',
+                  'applicationId = "com.vidyutsuraksha.app"'
+              )
+              gradle_file.write_text(content)
           PY
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          cmdline-tools-version: '12266719'
-          packages: 'platform-tools'
-
-      
-      
-      
       - name: Generate Gradle wrapper and build APK
         working-directory: VidyutSurakshaAndroid
         run: |
-          echo "Downloading Gradle 8.9..."
           wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip
           unzip -q gradle-8.9-bin.zip
           gradle-8.9/bin/gradle wrapper --gradle-version 8.9
@@ -73,14 +67,3 @@ jobs:
         with:
           name: VidyutSuraksha-debug-apk
           path: VidyutSurakshaAndroid/app/build/outputs/apk/debug/app-debug.apk
-
-
-
-
-      
-            - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: VidyutSuraksha-debug-apk
-          path: VidyutSurakshaAndroid/app/build/outputs/apk/debug/app-debug.apk
-
